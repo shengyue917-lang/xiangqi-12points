@@ -6,13 +6,28 @@
 - **获胜条件**：任意一方累计得分率先达到或超过 12 分立即获胜！吃掉对方【帅/将】直接计 12 分一击必杀。
 - **吃子前判定**：吃子得分按吃子动作发生前全盘存活棋子总数（开局32子）动态结算。
 - **身价表**：
-  - 将 / 帅：12.0 分
+  - 将 / 帅：12.0 分（绝杀）
   - 车：3.0 分
   - 炮（动态分）：全盘 $\ge 21$ 子值 2.0 分；$\le 20$ 子降为 1.5 分
   - 马（动态分）：全盘 $\ge 26$ 子值 1.5 分；$\le 25$ 子升为 2.0 分
   - 士 / 相：1.0 分
   - 兵 / 卒：0.5 分
-- **智能 AI 引擎**：基于 Minimax + 静态吃子搜索（Quiescence Search）与置换表（Transposition Table），杜绝短视送子。
+- **智能 AI 引擎**：基于 Minimax 极小化极大算法 + 静态吃子搜索（Quiescence Search）与置换表（Transposition Table），杜绝短视送子。
+
+## 项目目录架构
+```text
+├── index.html          # 游戏入口页面
+├── style.css           # 棋盘木纹质感样式与移动端自适应布局
+├── src/                # ES 模块化源码
+│   ├── audio.js        # Web Audio API 物理振荡音效合成器
+│   ├── rules.js        # 中国象棋走棋约束与12分动态身价规则引擎
+│   ├── ai.js           # Minimax + 静态吃子搜索 + 置换表 AI 引擎
+│   ├── ui.js           # 棋盘渲染、触控响应与仪表盘控制器
+│   └── main.js         # 应用程序入口引导与事件调度
+├── tests/              # Playwright 浏览器自动化全流程测试用例
+└── README.md           # 项目设计与架构文档
+```
 
 ## 运行与访问
-纯静态网页项目，无需后端环境，直接在现代浏览器中打开 `index.html` 即可畅玩。
+纯静态前端项目，无需 Node.js 或构建工具编译，直接在现代浏览器中打开即可畅玩。
+在线游玩地址：[https://shengyue917-lang.github.io/xiangqi-12points/](https://shengyue917-lang.github.io/xiangqi-12points/)
