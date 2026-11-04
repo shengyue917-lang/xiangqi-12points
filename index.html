@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>中国象棋 - 12分动态积分竞速对战</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- 头部标题 -->
+    <header class="app-header">
+      <div class="header-content">
+        <h1 class="game-title">
+          <span class="title-icon">⚔️</span>
+          中国象棋 · 12分动态竞速赛
+        </h1>
+        <p class="game-subtitle">抢分吃子 | 身价浮动 | 满十二分即胜 | 击杀将帅直接封神</p>
+      </div>
+      <div class="header-actions">
+        <button id="btn-sound-toggle" class="btn-icon" title="静音切换">🔊</button>
+        <button id="btn-help" class="btn-secondary">📜 规则速览</button>
+        <button id="btn-restart" class="btn-danger">🔄 重新开局</button>
+      </div>
+    </header>
+
+    <!-- 主体区域 -->
+    <main class="game-main">
+      <!-- 棋盘区 -->
+      <section class="board-wrapper">
+        <div class="board-frame">
+          <div id="board" class="board-grid">
+            <!-- SVG 背景网格与楚河汉界九宫线 -->
+            <svg id="board-svg" class="board-svg" viewBox="0 0 720 800" preserveAspectRatio="none">
+              <defs>
+                <filter id="wood-emboss" x="-10%" y="-10%" width="120%" height="120%">
+                  <feDropShadow dx="1" dy="1" stdDeviation="0.8" flood-opacity="0.35"/>
+                </filter>
+              </defs>
+              <!-- 边框 -->
+              <rect x="20" y="20" width="680" height="760" class="board-outer-border" />
+              <rect x="30" y="30" width="660" height="740" class="board-inner-border" />
+
+              <!-- 横线 10 条 -->
+              <g class="grid-lines">
+                <line x1="40" y1="40" x2="680" y2="40" />
+                <line x1="40" y1="120" x2="680" y2="120" />
+                <line x1="40" y1="200" x2="680" y2="200" />
+                <line x1="40" y1="280" x2="680" y2="280" />
+                <line x1="40" y1="360" x2="680" y2="360" />
+
+                <line x1="40" y1="440" x2="680" y2="440" />
+                <line x1="40" y1="520" x2="680" y2="520" />
+                <line x1="40" y1="600" x2="680" y2="600" />
+                <line x1="40" y1="680" x2="680" y2="680" />
+                <line x1="40" y1="760" x2="680" y2="760" />
+              </g>
+
+              <!-- 竖线 9 条 (河界断开) -->
+              <g class="grid-lines">
+                <!-- 两侧通天线 -->
+                <line x1="40" y1="40" x2="40" y2="760" />
+                <line x1="680" y1="40" x2="680" y2="760" />
+
+                <!-- 中间7条竖线，黑方部分 -->
+                <line x1="120" y1="40" x2="120" y2="360" />
+                <line x1="200" y1="40" x2="200" y2="360" />
+                <line x1="280" y1="40" x2="280" y2="360" />
+                <line x1="360" y1="40" x2="360" y2="360" />
+                <line x1="440" y1="40" x2="440" y2="360" />
+                <line x1="520" y1="40" x2="520" y2="360" />
+                <line x1="600" y1="40" x2="600" y2="360" />
+
+                <!-- 中间7条竖线，红方部分 -->
+                <line x1="120" y1="440" x2="120" y2="760" />
+                <line x1="200" y1="440" x2="200" y2="760" />
+                <line x1="280" y1="440" x2="280" y2="760" />
+                <line x1="360" y1="440" x2="360" y2="760" />
+                <line x1="440" y1="440" x2="440" y2="760" />
+                <line x1="520" y1="440" x2="520" y2="760" />
+                <line x1="600" y1="440" x2="600" y2="760" />
+              </g>
+
+              <!-- 九宫斜线 -->
+              <g class="grid-lines palace-lines">
+                <!-- 黑方九宫 (col 3~5, row 0~2 -> x: 280~440, y: 40~200) -->
+                <line x1="280" y1="40" x2="440" y2="200" />
+                <line x1="440" y1="40" x2="280" y2="200" />
+
+                <!-- 红方九宫 (col 3~5, row 7~9 -> x: 280~440, y: 600~760) -->
+                <line x1="280" y1="600" x2="440" y2="760" />
+                <line x1="440" y1="600" x2="280" y2="760" />
+              </g>
+
+              <!-- 楚河汉界字样 -->
+              <g class="river-text">
+                <text x="180" y="410" text-anchor="middle">楚 河</text>
+                <text x="540" y="410" text-anchor="middle">漢 界</text>
+              </g>
+            </svg>
+
+            <!-- 棋子与高亮交互层 -->
+            <div id="pieces-layer" class="pieces-layer"></div>
+            <div id="hints-layer" class="hints-layer"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 右侧仪表盘 -->
+      <aside class="dashboard">
+        <!-- 对战模式设置 -->
+        <div class="panel-card mode-card">
+          <div class="mode-header">
+            <span class="panel-label">🎮 对战模式</span>
+            <div class="mode-toggles">
+              <button id="mode-pvp" class="btn-mode active">👥 双人对战</button>
+              <button id="mode-pve" class="btn-mode">🤖 人机对战</button>
+            </div>
+          </div>
+          <div id="ai-settings" class="ai-settings hidden">
+            <div class="setting-row">
+              <span class="setting-label">AI 难度：</span>
+              <div class="diff-options">
+                <button class="btn-diff" data-diff="easy">新手(贪心)</button>
+                <button class="btn-diff active" data-diff="medium">进阶(推演)</button>
+                <button class="btn-diff" data-diff="hard">大师(高智)</button>
+              </div>
+            </div>
+            <div class="setting-row">
+              <span class="setting-label">玩家阵营：</span>
+              <div class="side-options">
+                <button id="btn-side-red" class="btn-side active">执红先行</button>
+                <button id="btn-side-black" class="btn-side">执黑后行</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 当前回合与状态 -->
+        <div class="panel-card turn-card">
+          <div class="turn-header">
+            <span class="panel-label">当前行动回合</span>
+            <div class="turn-badges">
+              <span id="ai-thinking-badge" class="badge badge-thinking hidden">🤖 AI 思考中...</span>
+              <span id="turn-badge" class="badge badge-red">红方走子</span>
+            </div>
+          </div>
+          <div class="turn-timer">
+            <span>回合计数：第 <b id="turn-round">1</b> 回合</span>
+            <span id="board-piece-count-badge" class="piece-count-pill">盘面 32 / 32 子</span>
+          </div>
+        </div>
+
+        <!-- 积分排行榜 -->
+        <div class="panel-card score-card">
+          <h3 class="panel-title">🏆 战况积分榜 (先达 12 分胜)</h3>
+          
+          <!-- 红方得分 -->
+          <div class="score-team red-team">
+            <div class="team-meta">
+              <span class="team-name"><span class="team-dot red-dot"></span>红方</span>
+              <span class="team-score"><b id="red-score">0.0</b> <small>/ 12</small></span>
+            </div>
+            <div class="progress-bar-bg">
+              <div id="red-progress" class="progress-bar red-bar" style="width: 0%;"></div>
+            </div>
+          </div>
+
+          <!-- 黑方得分 -->
+          <div class="score-team black-team">
+            <div class="team-meta">
+              <span class="team-name"><span class="team-dot black-dot"></span>黑方</span>
+              <span class="team-score"><b id="black-score">0.0</b> <small>/ 12</small></span>
+            </div>
+            <div class="progress-bar-bg">
+              <div id="black-progress" class="progress-bar black-bar" style="width: 0%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 实时身价挂牌看板 (动态系统) -->
+        <div class="panel-card market-card">
+          <h3 class="panel-title">📈 棋子市场身价动态牌</h3>
+          
+          <div class="market-item">
+            <div class="market-row">
+              <span class="piece-tag">🐎 【马】 当前身价</span>
+              <span id="horse-price" class="price-val">1.5 分</span>
+            </div>
+            <div class="market-desc" id="horse-tip">
+              当前盘面 ≥ 26 子 (1.5分)；还差 <b id="horse-diff">6</b> 子降至 25 子时升为 <b>2.0分</b>！
+            </div>
+          </div>
+
+          <div class="market-item">
+            <div class="market-row">
+              <span class="piece-tag">💣 【炮】 当前身价</span>
+              <span id="cannon-price" class="price-val">2.0 分</span>
+            </div>
+            <div class="market-desc" id="cannon-tip">
+              当前盘面 ≥ 21 子 (2.0分)；还差 <b id="cannon-diff">11</b> 子降至 20 子时降为 <b>1.5分</b>！
+            </div>
+          </div>
+
+          <div class="market-fixed">
+            <span class="fixed-tag">固定身价</span>
+            <span class="fixed-item">将/帅: <b>12分(秒杀)</b></span>
+            <span class="fixed-item">车: <b>3分</b></span>
+            <span class="fixed-item">士/相: <b>1分</b></span>
+            <span class="fixed-item">兵/卒: <b>0.5分</b></span>
+          </div>
+        </div>
+
+        <!-- 操作区 -->
+        <div class="panel-card actions-card">
+          <button id="btn-undo" class="btn-action" title="撤回上一着棋（完整回滚积分）">
+            ↩️ 悔棋一步
+          </button>
+        </div>
+
+        <!-- 吃子流水账记录 -->
+        <div class="panel-card logs-card">
+          <h3 class="panel-title">📜 战况与吃子流水</h3>
+          <div id="battle-logs" class="logs-container">
+            <div class="log-entry log-welcome">对局开始！红方先行，率先掠夺 12 分者获胜。</div>
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <!-- 胜利结算弹窗 -->
+    <div id="victory-modal" class="modal-overlay hidden">
+      <div class="modal-card">
+        <div class="modal-confetti">🎉 🏆 🎉</div>
+        <h2 id="victory-title" class="victory-title">红方凯旋大胜！</h2>
+        <div id="victory-reason" class="victory-reason">累计得分突破 12 分大关！</div>
+        
+        <div class="modal-stats">
+          <div class="stat-box">
+            <span class="stat-num" id="stat-winner-score">12.0</span>
+            <span class="stat-lbl">获胜积分</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-num" id="stat-rounds">18</span>
+            <span class="stat-lbl">总回合数</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-num" id="stat-remains">24</span>
+            <span class="stat-lbl">盘面存活子数</span>
+          </div>
+        </div>
+
+        <button id="btn-modal-restart" class="btn-primary btn-large">再战一局</button>
+      </div>
+    </div>
+
+    <!-- 规则说明弹窗 -->
+    <div id="rules-modal" class="modal-overlay hidden">
+      <div class="modal-card rules-card">
+        <h2>📜 12分动态积分制 规则说明</h2>
+        <div class="rules-content">
+          <p><strong>1. 胜负判定：</strong>任意一方总分率先达到或超过 <b>12分</b>，游戏立即结束该方胜！直接吃掉对方【帅/将】直接计 12 分即刻获胜。</p>
+          <p><strong>2. 吃子前判定 & 落袋为安：</strong>吃子得分按吃子动作发生前瞬间全盘存活棋子总数（开局32子）判定身价；得分一旦获得永久有效。</p>
+          <p><strong>3. 棋子分值速查：</strong></p>
+          <ul>
+            <li><strong>将 / 帅：</strong>12 分（绝杀）</li>
+            <li><strong>车：</strong>3 分</li>
+            <li><strong>士 / 仕：</strong>1 分</li>
+            <li><strong>相 / 象：</strong>1 分</li>
+            <li><strong>兵 / 卒：</strong>0.5 分（无论是否过河）</li>
+            <li><strong>马（动态分）：</strong>盘面 ≥ 26 子值 <b>1.5分</b>；盘面 ≤ 25 子升值为 <b>2.0分</b></li>
+            <li><strong>炮（动态分）：</strong>盘面 ≥ 21 子值 <b>2.0分</b>；盘面 ≤ 20 子降值为 <b>1.5分</b></li>
+          </ul>
+          <p><strong>4. 走法机制：</strong>严格遵循中国象棋规则（马走日蹩马腿、象走田塞象眼、炮隔一子打子等）。为加速竞速，无传统“将死禁走”限制，任何合规走子均可执行。</p>
+        </div>
+        <button id="btn-close-rules" class="btn-secondary">我知道了</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
